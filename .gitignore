@@ -1,0 +1,17 @@
+*~
+*.o
+*.o.cmd
+*.builtin
+*.order
+*.ko
+*.mod.c
+*.ko.cmd
+*.cmd
+.*
+drivers/gpu/mali/mali400ko/driver/src/devicedrv/mali/arch
+scripts/*
+usr/*
+lib/*
+arch/arm/boot/*
+cscope.*
+
