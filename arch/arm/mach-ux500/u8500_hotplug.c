@@ -24,12 +24,15 @@
 #include <linux/hrtimer.h>
 #include <linux/slab.h>
 
+#define DISABLED 0
+
 static struct work_struct suspend_work;
 static struct work_struct resume_work;
 
 static unsigned int max_freq = LONG_MAX;
 static bool update_freq = false;
-static unsigned int suspend_max_freq = 800000;
+
+static unsigned int suspend_max_freq = DISABLED;
 module_param(suspend_max_freq, uint, 0644);
 
 unsigned int input_boost_freq = 400000;
@@ -49,9 +52,11 @@ static int cpufreq_callback(struct notifier_block *nfb,
 	if (event != CPUFREQ_ADJUST || !update_freq)
 		return 0;
 
+	if (policy->max == max_freq)
+		return 0;
+
 	cpufreq_verify_within_limits(policy,
-		policy->cpuinfo.min_freq,
-		max_freq);
+		policy->min, max_freq);
 
 	return 0;
 }
@@ -63,6 +68,9 @@ static struct notifier_block cpufreq_notifier_block = {
 static void max_freq_limit(bool suspend)
 {
 	int cpu;
+
+	if (suspend && max_freq == suspend_max_freq)
+		return;
 
 	max_freq = suspend ? suspend_max_freq : LONG_MAX;
 
@@ -85,7 +93,8 @@ static void suspend_work_fn(struct work_struct *work)
 		cpu_down(cpu);
 	}
 
-	if (suspend_max_freq) max_freq_limit(true);
+	if (suspend_max_freq)
+		max_freq_limit(true);
 
 }
 
