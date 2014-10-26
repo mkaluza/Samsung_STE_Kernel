@@ -31,6 +31,7 @@
 #include <linux/sched.h>
 #include <linux/err.h>
 #include <linux/slab.h>
+#include <linux/u8500_hotplug.h>
 
 /* greater than 80% avg load across online CPUs increases frequency */
 #define DEFAULT_UP_FREQ_MIN_LOAD			(80)
@@ -118,10 +119,6 @@ static struct dbs_tuners {
 	.io_is_busy =			0,
 	.boost_timeout = 0,
 };
-
-extern u64 last_input_time;
-extern unsigned int input_boost_ms;
-extern unsigned int input_boost_freq;
 
 /*
  * A corner case exists when switching io_is_busy at run-time: comparing idle

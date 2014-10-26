@@ -31,6 +31,7 @@
 #include <linux/slab.h>
 #include <linux/kernel_stat.h>
 #include <asm/cputime.h>
+#include <linux/u8500_hotplug.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/cpufreq_interactive.h>
@@ -122,10 +123,6 @@ static int boost_val;
 static int boostpulse_duration_val = DEFAULT_MIN_SAMPLE_TIME;
 /* End time of boost pulse in ktime converted to usecs */
 static u64 boostpulse_endtime;
-
-extern u64 last_input_time;
-extern unsigned int input_boost_ms;
-extern unsigned int input_boost_freq;
 
 /*
  * Max additional time to wait in idle, beyond timer_rate, at speeds above
@@ -413,7 +410,7 @@ static void cpufreq_interactive_timer(unsigned long data)
 				max_load >= up_threshold_any_cpu_load)
 				new_freq = sync_freq;
 		}
-		
+
 		if (boosted) {
 			if (new_freq < input_boost_freq)
 				new_freq = input_boost_freq;

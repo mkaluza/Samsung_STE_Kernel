@@ -22,6 +22,7 @@
 #include <linux/tick.h>
 #include <linux/ktime.h>
 #include <linux/sched.h>
+#include <linux/u8500_hotplug.h>
 
 /*
  * dbs is used in this file as a shortform for demandbased switching
@@ -119,10 +120,6 @@ static struct dbs_tuners {
 	.ignore_nice = 0,
 	.powersave_bias = 0,
 };
-
-extern u64 last_input_time;
-extern unsigned int input_boost_ms;
-extern unsigned int input_boost_freq;
 
 static inline cputime64_t get_cpu_idle_time_jiffy(unsigned int cpu,
 							cputime64_t *wall)

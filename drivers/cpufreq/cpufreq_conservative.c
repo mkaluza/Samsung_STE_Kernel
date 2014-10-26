@@ -23,6 +23,7 @@
 #include <linux/tick.h>
 #include <linux/ktime.h>
 #include <linux/sched.h>
+#include <linux/u8500_hotplug.h>
 
 /*
  * dbs is used in this file as a shortform for demandbased switching
@@ -97,10 +98,6 @@ static struct dbs_tuners {
 	.ignore_nice = 0,
 	.freq_step = 10,
 };
-
-extern u64 last_input_time;
-extern unsigned int input_boost_ms;
-extern unsigned int input_boost_freq;
 
 static inline cputime64_t get_cpu_idle_time_jiffy(unsigned int cpu,
 							cputime64_t *wall)
@@ -431,7 +428,7 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 
 		return;
 	}
-	
+
 	/*
 	 * The optimal frequency is the frequency that is the lowest that
 	 * can support the current CPU usage without triggering the up

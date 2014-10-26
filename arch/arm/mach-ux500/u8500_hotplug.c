@@ -1,7 +1,7 @@
 /*
  * arch/arm/mach-ux500/u8500_hotplug.c
  *
- * Copyright (c) 2014, Zhao Wei Liew <zhaoweiliew@gmail.com>. 
+ * Copyright (c) 2014, Zhao Wei Liew <zhaoweiliew@gmail.com>.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -63,14 +63,14 @@ static struct notifier_block cpufreq_notifier_block = {
 static void max_freq_limit(bool suspend)
 {
 	int cpu;
-	
+
 	max_freq = suspend ? suspend_max_freq : LONG_MAX;
-	
+
 	update_freq = true;
-	
+
 	for_each_online_cpu(cpu)
 		cpufreq_update_policy(cpu);
-		
+
 	update_freq = false;
 }
 
@@ -84,8 +84,8 @@ static void suspend_work_fn(struct work_struct *work)
 
 		cpu_down(cpu);
 	}
-	
-	max_freq_limit(true);
+
+	if (suspend_max_freq) max_freq_limit(true);
 
 }
 
@@ -93,7 +93,7 @@ static void resume_work_fn(struct work_struct *work)
 {
 	int cpu;
 
-	max_freq_limit(false);
+	if (suspend_max_freq) max_freq_limit(false);
 
 	for_each_possible_cpu(cpu) {
 		if (!cpu)
