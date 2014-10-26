@@ -23,7 +23,6 @@
 #include <linux/input.h>
 #include <linux/hrtimer.h>
 #include <linux/slab.h>
-#include <linux/u8500_hotplug.h>
 
 static struct work_struct suspend_work;
 static struct work_struct resume_work;
@@ -33,12 +32,13 @@ static bool update_freq = false;
 static unsigned int suspend_max_freq = 800000;
 module_param(suspend_max_freq, uint, 0644);
 
-input_boost_freq = 400000;
+unsigned int input_boost_freq = 400000;
 module_param(input_boost_freq, uint, 0644);
 
-input_boost_ms = 40;
+unsigned int input_boost_ms = 40;
 module_param(input_boost_ms, uint, 0644);
 
+u64 last_input_time;
 #define MIN_INPUT_INTERVAL (150 * USEC_PER_MSEC)
 
 static int cpufreq_callback(struct notifier_block *nfb,

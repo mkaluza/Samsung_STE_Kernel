@@ -17,8 +17,13 @@
 #ifndef __U8500_HOTPLUG_H
 #define __U8500_HOTPLUG_H
 
-u64 last_input_time;
-unsigned int input_boost_ms;
-unsigned int input_boost_freq;
-
+#ifdef CONFIG_U8500_HOTPLUG
+extern u64 last_input_time;
+extern unsigned int input_boost_ms;
+extern unsigned int input_boost_freq;
+#else
+static u64 last_input_time = 0;
+static unsigned int input_boost_ms = 0;
+static unsigned int input_boost_freq = 0;
+#endif
 #endif
