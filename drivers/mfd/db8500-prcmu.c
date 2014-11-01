@@ -49,6 +49,7 @@
 #include "dbx500-prcmu-regs.h"
 
 #include <linux/module.h>
+#include <linux/semaphore.h>
 
 //time to wait when restoring default liveopp voltage before switching freqs
 unsigned long uv_recovery_delay_us = 50;
@@ -1670,6 +1671,14 @@ static int db8500_prcmu_set_arm_opp(u8 opp)
 }
 
 #ifdef CONFIG_DB8500_LIVEOPP
+static struct delayed_work undervolt_unlock_work;
+static DEFINE_MUTEX(undervolt_lock);
+
+void undervolt_unlock_func(struct work_struct *work) {
+	mutex_unlock(&undervolt_lock);
+}
+static DECLARE_DELAYED_WORK(undervolt_unlock_work, undervolt_unlock_func);
+
 static struct delayed_work undervolt_work;
 static struct undervolt_struct {
 	spinlock_t lock;
@@ -1681,10 +1690,12 @@ void undervolt_func(struct work_struct *work) {
 	u8 val, last;
 	struct liveopp_arm_table table = liveopp_arm[last_arm_idx];
 
-	spin_lock(&undervolt_data.lock);
+	//spin_lock(&undervolt_data.lock);
+	mutex_lock(&undervolt_lock);
 	if (undervolt_data.last == undervolt_data.target) {
-		spin_unlock(&undervolt_data.lock);
 		printk(KERN_ERR "undervolt: abort: 0x%x", undervolt_data.target);
+		//spin_unlock(&undervolt_data.lock);
+		mutex_unlock(&undervolt_lock);
 		return;
 	}
 	last = undervolt_data.last;
@@ -1694,10 +1705,11 @@ void undervolt_func(struct work_struct *work) {
 	if (val != undervolt_data.target) {
 		schedule_delayed_work(&undervolt_work, msecs_to_jiffies(5));
 	}
-	spin_unlock(&undervolt_data.lock);
+	//spin_unlock(&undervolt_data.lock);
 	//write
 	printk(KERN_ERR "undervolt: 0x%x -> 0x%x -> 0x%x", last, val, undervolt_data.target);
 	prcmu_abb_write(AB8500_REGU_CTRL2, table.varm_sel, &val, 1);
+	mutex_unlock(&undervolt_lock);
 };
 
 static DECLARE_DELAYED_WORK(undervolt_work, undervolt_func);
@@ -1718,14 +1730,16 @@ static inline int db8500_prcmu_set_arm_lopp(u8 opp, int idx)
 	r = 0;
 
 	if (prev_table.varm_uv_raw > 0) {
-		spin_lock(&undervolt_data.lock);
+		mutex_lock(&undervolt_lock);
+		//spin_lock(&undervolt_data.lock);
 		printk(KERN_ERR  "undervolt: restore 0x%x(0x%x) -> 0x%x;", undervolt_data.last, undervolt_data.target, prev_table.varm_raw);
 		if (undervolt_data.last != undervolt_data.target) {
 			undervolt_data.target = undervolt_data.last = prev_table.varm_raw;
 			cancel_delayed_work(&undervolt_work);
 		}
-		spin_unlock(&undervolt_data.lock);
+		//spin_unlock(&undervolt_data.lock);
 		prcmu_abb_write(AB8500_REGU_CTRL2, prev_table.varm_sel, &prev_table.varm_raw, 1);
+		mutex_unlock(&undervolt_lock);
 		udelay(uv_recovery_delay_us);
 	}
 
