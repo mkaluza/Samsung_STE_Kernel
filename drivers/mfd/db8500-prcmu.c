@@ -1717,7 +1717,7 @@ static inline int db8500_prcmu_set_arm_lopp(u8 opp, int idx)
 	trace_u8500_set_arm_opp(opp);
 	r = 0;
 
-	if (prev_table.varm_uv_raw) {
+	if (prev_table.varm_uv_raw > 0) {
 		spin_lock(&undervolt_data.lock);
 		printk(KERN_ERR  "undervolt: restore 0x%x(0x%x) -> 0x%x;", undervolt_data.last, undervolt_data.target, prev_table.varm_raw);
 		if (undervolt_data.last != undervolt_data.target) {
