@@ -1687,28 +1687,30 @@ static struct undervolt_struct {
 } undervolt_data;
 
 void undervolt_func(struct work_struct *work) {
-	u8 val, last;
+	u8 val;
 	struct liveopp_arm_table table = liveopp_arm[last_arm_idx];
 
-	//spin_lock(&undervolt_data.lock);
-	mutex_lock(&undervolt_lock);
+	if (mutex_trylock(&undervolt_lock) == 0) {
+		printk(KERN_ERR "undervolt: abort on mutex: 0x%x", undervolt_data.target);
+		return;
+	}
 	if (undervolt_data.last == undervolt_data.target) {
-		printk(KERN_ERR "undervolt: abort: 0x%x", undervolt_data.target);
-		//spin_unlock(&undervolt_data.lock);
+		printk(KERN_ERR "undervolt: abort on data: 0x%x", undervolt_data.target);
 		mutex_unlock(&undervolt_lock);
 		return;
 	}
-	last = undervolt_data.last;
-	val = (last+undervolt_data.target) >> 1;
-	if (val == undervolt_data.last) val--;
+
+	val = (undervolt_data.last+undervolt_data.target) >> 1;
+
+	printk(KERN_ERR "undervolt: 0x%x -> 0x%x -> 0x%x", undervolt_data.last, val, undervolt_data.target);
+	prcmu_abb_write(AB8500_REGU_CTRL2, table.varm_sel, &val, 1);
+
 	undervolt_data.last = val;
+
 	if (val != undervolt_data.target) {
 		schedule_delayed_work(&undervolt_work, msecs_to_jiffies(5));
 	}
-	//spin_unlock(&undervolt_data.lock);
-	//write
-	printk(KERN_ERR "undervolt: 0x%x -> 0x%x -> 0x%x", last, val, undervolt_data.target);
-	prcmu_abb_write(AB8500_REGU_CTRL2, table.varm_sel, &val, 1);
+
 	mutex_unlock(&undervolt_lock);
 };
 
@@ -1731,16 +1733,14 @@ static inline int db8500_prcmu_set_arm_lopp(u8 opp, int idx)
 
 	if (prev_table.varm_uv_raw > 0) {
 		mutex_lock(&undervolt_lock);
-		//spin_lock(&undervolt_data.lock);
 		printk(KERN_ERR  "undervolt: restore 0x%x(0x%x) -> 0x%x;", undervolt_data.last, undervolt_data.target, prev_table.varm_raw);
 		if (undervolt_data.last != undervolt_data.target) {
 			undervolt_data.target = undervolt_data.last = prev_table.varm_raw;
 			cancel_delayed_work(&undervolt_work);
 		}
-		//spin_unlock(&undervolt_data.lock);
 		prcmu_abb_write(AB8500_REGU_CTRL2, prev_table.varm_sel, &prev_table.varm_raw, 1);
-		mutex_unlock(&undervolt_lock);
 		udelay(uv_recovery_delay_us);
+		mutex_unlock(&undervolt_lock);
 	}
 
 	mutex_lock(&mb1_transfer.lock);
