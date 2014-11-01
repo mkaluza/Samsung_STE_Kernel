@@ -48,6 +48,17 @@
 #include <mach/prcmu-debug.h>
 #include "dbx500-prcmu-regs.h"
 
+#include <linux/module.h>
+
+//time to wait when restoring default liveopp voltage before switching freqs
+unsigned long uv_recovery_delay_us = 50;
+module_param(uv_recovery_delay_us, ulong, 0644);
+
+//time to wait before starting undervolting operation
+//higher values prevent undervolting for short freq bursts
+unsigned long uv_start_delay_ms = 20;
+module_param(uv_start_delay_ms, ulong, 0644);
+
 #ifdef CONFIG_SAMSUNG_PANIC_DISPLAY_DEVICES
 #define PRCMU_I2C_TIMEOUT	0x0F000000
 #endif //CONFIG_SAMSUNG_PANIC_DISPLAY_DEVICES
@@ -1362,6 +1373,11 @@ static ssize_t arm_step_show(struct kobject *kobj, struct kobj_attribute *attr, 
 	sprintf(buf, "%sVbbx:\t\t\t%#04x\n", buf, (int)liveopp_arm[_index].vbbx_raw);
 	sprintf(buf, "%sQOS_DDR_OPP:\t\t\t%d\n", buf, (int)((signed char)liveopp_arm[_index].ddr_opp));
 	sprintf(buf, "%sQOS_APE_OPP:\t\t\t%d\n", buf, (int)((signed char)liveopp_arm[_index].ape_opp));
+	if (liveopp_arm[_index].varm_uv_raw)
+		sprintf(buf, "%sVarm_uv:\t\t\t%d uV (%#04x)\n", buf, varm_voltage(liveopp_arm[_index].varm_uv_raw),
+								     (int)liveopp_arm[_index].varm_uv_raw);
+	else
+		sprintf(buf, "%sVarm_uv:\t\t\tDisabled\n", buf);
 
 	return sprintf(buf, "%s\n", buf);
 }
@@ -1505,6 +1521,17 @@ static ssize_t arm_step_store(struct kobject *kobj, struct kobj_attribute *attr,
 
 		return count;
 	}
+	if (!strncmp(buf, "varm_uv=", 8)) {
+		ret = sscanf(&buf[8], "%x", &val);
+		if ((!ret)) {
+			pr_err("[LiveOPP] Invalid value\n");
+			return -EINVAL;
+		}
+
+		liveopp_arm[_index].varm_uv_raw = val;
+
+		return count;
+	}
 
 	return count;
 }
@@ -1643,11 +1670,45 @@ static int db8500_prcmu_set_arm_opp(u8 opp)
 }
 
 #ifdef CONFIG_DB8500_LIVEOPP
+static struct delayed_work undervolt_work;
+static struct undervolt_struct {
+	spinlock_t lock;
+	u8 last, target;
+	u8 reg;
+} undervolt_data;
+
+void undervolt_func(struct work_struct *work) {
+	u8 val, last;
+	struct liveopp_arm_table table = liveopp_arm[last_arm_idx];
+
+	spin_lock(&undervolt_data.lock);
+	if (undervolt_data.last == undervolt_data.target) {
+		spin_unlock(&undervolt_data.lock);
+		printk(KERN_ERR "undervolt: abort: 0x%x", undervolt_data.target);
+		return;
+	}
+	last = undervolt_data.last;
+	val = (last+undervolt_data.target) >> 1;
+	if (val == undervolt_data.last) val--;
+	undervolt_data.last = val;
+	if (val != undervolt_data.target) {
+		schedule_delayed_work(&undervolt_work, msecs_to_jiffies(5));
+	}
+	spin_unlock(&undervolt_data.lock);
+	//write
+	printk(KERN_ERR "undervolt: 0x%x -> 0x%x -> 0x%x", last, val, undervolt_data.target);
+	prcmu_abb_write(AB8500_REGU_CTRL2, table.varm_sel, &val, 1);
+};
+
+static DECLARE_DELAYED_WORK(undervolt_work, undervolt_func);
+
 static inline int db8500_prcmu_set_arm_lopp(u8 opp, int idx)
 {
 	int r;
 	struct liveopp_arm_table table = liveopp_arm[idx];
+	struct liveopp_arm_table prev_table = liveopp_arm[last_arm_idx];
 	u8 last_opp = liveopp_arm[last_arm_idx].arm_opp;
+	u8 varm_uv;
 	bool voltage_first = (idx > last_arm_idx);
 
 	if (opp < ARM_NO_CHANGE || opp > ARM_EXTCLK)
@@ -1655,6 +1716,18 @@ static inline int db8500_prcmu_set_arm_lopp(u8 opp, int idx)
 
 	trace_u8500_set_arm_opp(opp);
 	r = 0;
+
+	if (prev_table.varm_uv_raw) {
+		spin_lock(&undervolt_data.lock);
+		printk(KERN_ERR  "undervolt: restore 0x%x(0x%x) -> 0x%x;", undervolt_data.last, undervolt_data.target, prev_table.varm_raw);
+		if (undervolt_data.last != undervolt_data.target) {
+			undervolt_data.target = undervolt_data.last = prev_table.varm_raw;
+			cancel_delayed_work(&undervolt_work);
+		}
+		spin_unlock(&undervolt_data.lock);
+		prcmu_abb_write(AB8500_REGU_CTRL2, prev_table.varm_sel, &prev_table.varm_raw, 1);
+		udelay(uv_recovery_delay_us);
+	}
 
 	mutex_lock(&mb1_transfer.lock);
 
@@ -1719,6 +1792,16 @@ static inline int db8500_prcmu_set_arm_lopp(u8 opp, int idx)
 
 	prcmu_debug_arm_opp_log(opp);
 	liveopp_update_opp(liveopp_arm[idx]);
+	varm_uv = liveopp_arm[idx].varm_uv_raw;
+	printk(KERN_ERR  "undervolt: 0x%x -> 0x%x;", liveopp_arm[idx].varm_raw, varm_uv);
+	if (varm_uv > 0 && varm_uv < liveopp_arm[idx].varm_raw) {
+		spin_lock(&undervolt_data.lock);
+		cancel_delayed_work(&undervolt_work);
+		undervolt_data.target = varm_uv;
+		undervolt_data.last = liveopp_arm[idx].varm_raw;
+		spin_unlock(&undervolt_data.lock);
+		schedule_delayed_work(&undervolt_work, msecs_to_jiffies(uv_start_delay_ms));
+	}
 
 	return r;
 }

@@ -65,6 +65,7 @@ struct liveopp_arm_table
 	u8  	vbbx_raw;
 	s8	ddr_opp;
 	s8	ape_opp;
+	u8	varm_uv_raw;
 };
 
 /* Varm in 12.5mV steps */
