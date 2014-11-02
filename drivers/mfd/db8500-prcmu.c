@@ -1809,12 +1809,12 @@ static inline int db8500_prcmu_set_arm_lopp(u8 opp, int idx)
 	varm_uv = liveopp_arm[idx].varm_uv_raw;
 	printk(KERN_ERR  "undervolt: 0x%x -> 0x%x;", liveopp_arm[idx].varm_raw, varm_uv);
 	if (varm_uv > 0 && varm_uv < liveopp_arm[idx].varm_raw) {
-		spin_lock(&undervolt_data.lock);
+		mutex_lock(&undervolt_lock);
 		cancel_delayed_work(&undervolt_work);
 		undervolt_data.target = varm_uv;
 		undervolt_data.last = liveopp_arm[idx].varm_raw;
-		spin_unlock(&undervolt_data.lock);
 		schedule_delayed_work(&undervolt_work, msecs_to_jiffies(uv_start_delay_ms));
+		mutex_unlock(&undervolt_lock);
 	}
 
 	return r;
