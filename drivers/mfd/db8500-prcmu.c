@@ -60,6 +60,9 @@ module_param(uv_recovery_delay_us, ulong, 0644);
 unsigned long uv_start_delay_ms = 20;
 module_param(uv_start_delay_ms, ulong, 0644);
 
+unsigned long liveopp_voltage_latency_us = 0;
+module_param(liveopp_voltage_latency_us, ulong, 0644);
+
 #ifdef CONFIG_SAMSUNG_PANIC_DISPLAY_DEVICES
 #define PRCMU_I2C_TIMEOUT	0x0F000000
 #endif //CONFIG_SAMSUNG_PANIC_DISPLAY_DEVICES
@@ -1249,8 +1252,10 @@ static inline void liveopp_set_armext(struct liveopp_arm_table table)
 
 static inline void liveopp_update_arm(struct liveopp_arm_table table, bool voltage_first)
 {
-	if (table.set_volt && voltage_first)
+	if (table.set_volt && voltage_first) {
 		liveopp_set_armvolt(table);
+		if (liveopp_voltage_latency_us > 0) udelay(liveopp_voltage_latency_us);
+	}
 
 	if (table.set_pllarm)
 		liveopp_set_armpll(table);
@@ -1731,6 +1736,8 @@ static inline int db8500_prcmu_set_arm_lopp(u8 opp, int idx)
 	trace_u8500_set_arm_opp(opp);
 	r = 0;
 
+	printk(KERN_ERR "liveopp: switching to %d idx", idx);
+
 	if (prev_table.varm_uv_raw > 0) {
 		mutex_lock(&undervolt_lock);
 		printk(KERN_ERR  "undervolt: restore 0x%x(0x%x) -> 0x%x;", undervolt_data.last, undervolt_data.target, prev_table.varm_raw);
@@ -1752,6 +1759,7 @@ static inline int db8500_prcmu_set_arm_lopp(u8 opp, int idx)
 		if (last_opp == ARM_EXTCLK && opp == ARM_50_OPP) {
 			table = liveopp_arm[ARM_50_OPP_IDX];
 			prcmu_abb_write(AB8500_REGU_CTRL2, table.varm_sel, &table.varm_raw, 1);
+			if (liveopp_voltage_latency_us > 0) udelay(liveopp_voltage_latency_us);
 
 			db8500_prcmu_writel(PRCMU_PLLARM_REG, table.pllarm_raw);
 			voltage_first = (idx > ARM_50_OPP_IDX);
