@@ -3196,6 +3196,11 @@ static int __devinit s6e63m0_mcde_panel_probe(struct mcde_display_device *ddev)
 
 	//when screen is on, APE_OPP 25 sometimes messes it up
 	//TODO change these to add/update/remove
+	if (prcmu_qos_add_requirement(PRCMU_QOS_DDR_OPP,
+			"janice_lcd_dpi", 50)) {
+		pr_info("pcrm_qos_add DDR failed\n");
+	}
+
 	if (prcmu_qos_add_requirement(PRCMU_QOS_APE_OPP,
 			"janice_lcd_dpi", 50)) {
 		pr_info("pcrm_qos_add APE failed\n");
@@ -3337,6 +3342,8 @@ static void s6e63m0_mcde_panel_early_suspend(struct early_suspend *earlysuspend)
 	s6e63m0_mcde_panel_suspend(lcd->ddev, dummy);
 	dpi_display_platform_disable(lcd);
 
+	prcmu_qos_remove_requirement(PRCMU_QOS_DDR_OPP,
+				"janice_lcd_dpi");
 	prcmu_qos_remove_requirement(PRCMU_QOS_APE_OPP,
 				"janice_lcd_dpi");
 }
@@ -3344,6 +3351,11 @@ static void s6e63m0_mcde_panel_early_suspend(struct early_suspend *earlysuspend)
 static void s6e63m0_mcde_panel_late_resume(struct early_suspend *earlysuspend)
 {
 	struct s6e63m0 *lcd = container_of(earlysuspend, struct s6e63m0, earlysuspend);
+
+	if (prcmu_qos_add_requirement(PRCMU_QOS_DDR_OPP,
+			"janice_lcd_dpi", 50)) {
+		pr_info("pcrm_qos_add DDR failed\n");
+	}
 
 	if (prcmu_qos_add_requirement(PRCMU_QOS_APE_OPP,
 			"janice_lcd_dpi", 50)) {
