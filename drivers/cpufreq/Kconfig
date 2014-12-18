@@ -109,6 +109,12 @@ config CPU_FREQ_DEFAULT_GOV_INTERACTIVE
 	  loading your cpufreq low-level hardware driver, using the
 	  'interactive' governor for latency-sensitive workloads.
 
+config CPU_FREQ_DEFAULT_GOV_DYNAMIC
+	bool "dynamic"
+	select CPU_FREQ_GOV_DYNAMIC
+	help
+	  Use the CPUFreq governor 'dynamic' as default.
+
 config CPU_FREQ_DEFAULT_GOV_ABYSSPLUG
 	bool "abyssplug"
 	select CPU_FREQ_GOV_ABYSSPLUG
@@ -188,6 +194,21 @@ config CPU_FREQ_GOV_INTERACTIVE
 	  For details, take a look at linux/Documentation/cpu-freq.
 
 	  If in doubt, say N.
+
+config CPU_FREQ_GOV_DYNAMIC
+	tristate "'dynamic' cpufreq policy governor"
+	help
+		'dynamic' - A dynamic cpufreq governor for
+		Low Latency Frequency Transition capable processors
+		optimised for use in a battery environment.
+
+		For details see:
+		https://github.com/mkaluza/project-zen/wiki/Dynamic-governor
+
+		To compile this driver as a module, choose M here: the
+		module will be called cpufreq_dynamic.
+
+		If in doubt, say N.
 
 config CPU_FREQ_GOV_CONSERVATIVE
 	tristate "'conservative' cpufreq governor"
