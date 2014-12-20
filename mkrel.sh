@@ -13,15 +13,17 @@ branch=`git rev-parse --abbrev-ref HEAD`
 git checkout $rel
 
 for ver in release debug; do
+	dest=rel/$rel/$ver
+	[ -d $dest ] && continue
 	make mk_${ver}_defconfig
 	make -j 4
-	mkdir -p rel/$rel/$ver
+	mkdir -p $dest
 	TMP=`mktemp -d`
 	cp `find -iname *.ko` $TMP
 
-	cp arch/arm/boot/zImage rel/$rel/$ver/
+	cp arch/arm/boot/zImage $dest
 	cd $TMP
-	zip $OLDPWD/rel/$rel/$ver/modules.zip *
+	zip $OLDPWD/$dest/modules.zip *
 	rm -rf $TMP
 	cd -
 done
