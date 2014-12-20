@@ -61,6 +61,12 @@ static unsigned int min_sampling_rate;
 #define MAX_SAMPLING_UP_FACTOR		(20)
 #define TRANSITION_LATENCY_LIMIT		(10 * 1000 * 1000)
 
+enum ignore_nice_enum {
+	IGNORE_NICE_SUSPEND,
+	IGNORE_NICE_STANDBY,
+	IGNORE_NICE_ALWAYS
+};
+
 static void do_dbs_timer(struct work_struct *work);
 
 struct cpu_dbs_info_s {
@@ -135,7 +141,7 @@ static struct dbs_tuners {
 	.sampling_down_factor = 2,
 	.sampling_down_factor_relax = 5,
 
-	.ignore_nice = 1,
+	.ignore_nice = 0,
 	.io_is_busy = 20*128/100,
 	.freq_step = 10*128/100,
 
@@ -513,7 +519,11 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 			}
 		}
 
-		if (dbs_tuners_ins.ignore_nice) {
+		if (
+				(active && dbs_tuners_ins.ignore_nice == IGNORE_NICE_ALWAYS)
+				|| (standby && dbs_tuners_ins.ignore_nice >= IGNORE_NICE_STANDBY)
+				|| (suspend && !boosted)
+				) {
 			cputime64_t cur_nice;
 			unsigned long cur_nice_jiffies;
 
@@ -526,9 +536,9 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 			cur_nice_jiffies = (unsigned long)
 					cputime64_to_jiffies64(cur_nice);
 
-			j_dbs_info->prev_cpu_nice = kstat_cpu(j).cpustat.nice;
 			idle_time += jiffies_to_usecs(cur_nice_jiffies);
 		}
+		j_dbs_info->prev_cpu_nice = kstat_cpu(j).cpustat.nice;
 
 		if (unlikely(!wall_time || wall_time < idle_time))
 			continue;
@@ -545,6 +555,7 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 		//so power cost is very little...
 		freq_target = suspend ? policy->max : dbs_tuners_ins.input_boost_freq;
 		if (policy->cur < freq_target) {
+			pr_debug("Boosting freq from %d to %d", this_dbs_info->requested_freq, freq_target);
 			this_dbs_info->requested_freq = freq_target;
 			__cpufreq_driver_target(policy, freq_target, CPUFREQ_RELATION_H);
 			return;
@@ -602,8 +613,10 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 	 */
 	if (policy->cur == policy->min) {
 		if (active) {
-			if (++(this_dbs_info->standby_counter) >= dbs_tuners_ins.standby_delay_factor)
+			if (++(this_dbs_info->standby_counter) >= dbs_tuners_ins.standby_delay_factor) {
 				standby = true;
+				pr_debug("Entering standby");
+			}
 
 			//TODO move all state management code to functions and just call go_active, go_suspend etc...
 			delay = dbs_tuners_ins.standby_sampling_rate;
