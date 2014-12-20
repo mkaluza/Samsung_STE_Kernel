@@ -1781,15 +1781,14 @@ static int arm_set_rate(unsigned long rate)
 		return 0;
 #endif
 
-#if CONFIG_LIVEOPP_DEBUG > 0
-	pr_info("kHz: %10lu\n", frequency);
-#endif
-
 	/*  catch early access */
 	BUG_ON(!freq_table);
 
 	for (i = 0; i < ARRAY_SIZE(liveopp_arm); i++) {
 		if (frequency == freq_table[i].frequency) {
+#if CONFIG_LIVEOPP_DEBUG > 0
+			pr_info("[LiveOPP] (%d -> %d) kHz: %10lu\n", last_arm_idx, i, frequency);
+#endif
 			db8500_prcmu_set_arm_lopp(liveopp_arm[i].arm_opp, i);
 			last_arm_idx = i;
 
