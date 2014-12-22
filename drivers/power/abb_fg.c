@@ -2714,7 +2714,7 @@ static int ab8500_fg_get_property(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_CAPACITY_RAW:
 
 		val->intval = (di->bat_cap.mah  * 1000) / di->bat_cap.max_mah ;
-		printk("raw soc = %d",val->intval);
+		pr_debug("raw soc = %d\n",val->intval);
 		break;
 #endif
 	/* Instantaneous vbat ADC value */
