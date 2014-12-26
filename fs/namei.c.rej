@@ -1,0 +1,36 @@
+--- fs/namei.c
++++ fs/namei.c
+@@ -371,8 +401,6 @@
+  */
+ int inode_permission(struct inode *inode, int mask)
+ {
+-	int retval;
+-
+ 	if (unlikely(mask & MAY_WRITE)) {
+ 		umode_t mode = inode->i_mode;
+ 
+@@ -382,23 +410,9 @@
+ 		if (IS_RDONLY(inode) &&
+ 		    (S_ISREG(mode) || S_ISDIR(mode) || S_ISLNK(mode)))
+ 			return -EROFS;
+-
+-		/*
+-		 * Nobody gets write access to an immutable file.
+-		 */
+-		if (IS_IMMUTABLE(inode))
+-			return -EACCES;
+ 	}
+ 
+-	retval = do_inode_permission(inode, mask);
+-	if (retval)
+-		return retval;
+-
+-	retval = devcgroup_inode_permission(inode, mask);
+-	if (retval)
+-		return retval;
+-
+-	return security_inode_permission(inode, mask);
++	return inode_only_permission(inode, mask);
+ }
+ 
+ /**

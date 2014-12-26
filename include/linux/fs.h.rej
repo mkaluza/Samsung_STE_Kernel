@@ -1,0 +1,14 @@
+--- include/linux/fs.h
++++ include/linux/fs.h
+@@ -1513,6 +1519,11 @@
+ 
+ 	/* Being remounted read-only */
+ 	int s_readonly_remount;
++
++	/*
++	 * Indicates how deep in a filesystem stack this SB is
++	 */
++	int s_stack_depth;
+ };
+ 
+ /* superblock cache pruning functions */
