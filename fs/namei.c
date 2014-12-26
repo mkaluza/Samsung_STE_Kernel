@@ -367,6 +367,7 @@ int deny_write_access(struct file * file)
 
 	return 0;
 }
+EXPORT_SYMBOL(deny_write_access);
 
 /**
  * path_get - get a reference to a path
@@ -1709,6 +1710,7 @@ struct dentry *lookup_hash(struct nameidata *nd)
 {
 	return __lookup_hash(&nd->last, nd->path.dentry, nd);
 }
+EXPORT_SYMBOL(lookup_hash);
 
 /**
  * lookup_one_len - filesystem helper to lookup single pathname component
