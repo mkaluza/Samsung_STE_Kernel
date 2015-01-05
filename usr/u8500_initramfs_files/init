@@ -34,9 +34,9 @@ fi
 if busybox test -f /mnt/efs/lvm.cpio.gz ; then
 	busybox zcat /mnt/efs/lvm.cpio.gz | busybox cpio -i -u
 fi
-busybox umount /mnt/efs
 
-busybox test -f /stage1/extra.sh && busybox sh /stage1/extra.sh
+busybox test -f /mnt/efs/extra.sh && busybox sh /mnt/efs/extra.sh
+busybox umount /mnt/efs
 
 busybox umount /sys
 busybox umount /proc
