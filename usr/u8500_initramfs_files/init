@@ -25,14 +25,14 @@ busybox mount -t ext4 /dev/block/mmcblk0p7 /mnt/efs
 # install lvm files and apply overlay if it exists
 if busybox test -f /stage1/lvm.cpio ; then
 	busybox cpio -i < /stage1/lvm.cpio
-	if busybox test -f /mnt/efs/lvm.cpio.gz ; then
-		busybox zcat /mnt/efs/lvm.cpio.gz | busybox cpio -i -u
-	fi
 fi
 
 # apply ramdisk overlay from /efs partition
 if busybox test -f ${extra_image} ; then
 	busybox zcat ${extra_image} | busybox cpio -i -u
+fi
+if busybox test -f /mnt/efs/lvm.cpio.gz ; then
+	busybox zcat /mnt/efs/lvm.cpio.gz | busybox cpio -i -u
 fi
 busybox umount /mnt/efs
 
