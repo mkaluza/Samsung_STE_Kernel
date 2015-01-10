@@ -125,5 +125,6 @@ cat >> /init.rc << _EOF
 #monkey-patched by stage1 init script
 import /init.kernel.rc
 import /init.overlay.rc
+import /init.extra.rc
 _EOF
 exec /init
