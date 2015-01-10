@@ -1,0 +1,9 @@
+#!/stage1/busybox sh
+
+src=$1
+
+echo "Loading overlays from $src..."
+for f in $src/*; do
+	[ ! -s $f ] && continue
+	unpack $f
+done

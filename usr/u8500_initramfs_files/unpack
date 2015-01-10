@@ -1,0 +1,41 @@
+#!/stage1/busybox sh
+
+unpack=cat
+unpack_gz=zcat
+unpack_bz=bzcat
+unpack_bz2=bzcat
+unpack_bzip2=bzcat
+unpack_xz=xzcat
+unpack_lz=lzcat
+
+expand_cpio="cpio -i -u"
+expand_tar="tar -xf -"
+expand_tgz="tar -zxf -"
+
+fname=$1
+
+#find the unpacker
+ext=${fname##*.}
+eval tmp=\$unpack_$ext
+if [ -z "$tmp" ]; then
+	echo "WARNING: unpacker for .$ext not found, trying cat..."
+else
+	unpack=$tmp
+	fname=${fname%.*}
+	ext=${fname##*.}
+fi
+
+#expand the archive
+eval expand="\$expand_$ext"
+if [ -z "$expand" ]; then
+	echo "ERROR: expander for $1 not found"
+	return
+fi
+
+echo "Extracting $1..."
+busybox $unpack $1 | busybox $expand
+
+#strip remaining extension
+fname=`busybox basename $fname .$ext`
+#load init.rc if it contained one
+[ -f /init.$fname.rc ] && echo "import /init.$fname.rc" >> /init.overlay.rc

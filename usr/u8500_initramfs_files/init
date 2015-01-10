@@ -6,61 +6,6 @@ busybox cd /
 busybox date >>boot.txt
 exec >>boot.txt 2>&1
 
-### FUNCTIONS
-
-function unpack() {
-	unpack=cat
-	unpack_gz=zcat
-	unpack_bz=bzcat
-	unpack_bz2=bzcat
-	unpack_bzip2=bzcat
-	unpack_xz=xzcat
-	unpack_lz=lzcat
-
-	expand_cpio="cpio -i -u"
-	expand_tar="tar -xf -"
-	expand_tgz="tar -zxf -"
-
-	fname=$1
-
-	#find the unpacker
-	ext=${fname##*.}
-	eval tmp=\$unpack_$ext
-	if [ -z "$tmp" ]; then
-		echo "WARNING: unpacker for .$ext not found, trying cat..."
-	else
-		unpack=$tmp
-		fname=${fname%.*}
-		ext=${fname##*.}
-	fi
-
-	#expand the archive
-	eval expand="\$expand_$ext"
-	if [ -z "$expand" ]; then
-		echo "ERROR: expander for $1 not found"
-		return
-	fi
-
-	echo "Extracting $1..."
-	$unpack $1 | $expand
-
-	#strip remaining extension
-	fname=${fname%.*}
-	#load init.rc if it contained one
-	[ -f /init.$fname.rc ] && echo "import /init.$fname.rc" >> /init.overlay.rc
-}
-
-function load_dir() {
-	src=$1
-
-	echo "Loading overlays from $src..."
-	for f in $src/*; do
-		[ ! -s $f ] && continue
-		unpack $f
-	done
-}
-### END FUNCTIONS
-
 busybox rm init
 busybox mount -t proc proc /proc
 busybox mount -t sysfs sysfs /sys
@@ -113,13 +58,6 @@ chmod 644 /init.overlay.rc
 
 busybox test -f /stage1/extra.sh && busybox sh /stage1/extra.sh
 
-busybox umount /mnt/efs
-
-busybox umount /sys
-busybox umount /proc
-busybox date >>boot.txt
-busybox rm -fr /stage1 /dev/*
-export PATH="${_PATH}"
 cat >> /init.rc << _EOF
 
 #monkey-patched by stage1 init script
@@ -127,4 +65,12 @@ import /init.kernel.rc
 import /init.overlay.rc
 import /init.extra.rc
 _EOF
+
+busybox umount /mnt/efs
+
+busybox umount /sys
+busybox umount /proc
+busybox date >>boot.txt
+busybox rm -fr /stage1 /dev/*
+export PATH="${_PATH}"
 exec /init

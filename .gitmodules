@@ -1,0 +1,3 @@
+[submodule "initramfs"]
+	path = initramfs
+	url = git@github.com:mkaluza/ste-ramdisk-vanir
