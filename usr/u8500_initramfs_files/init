@@ -5,28 +5,88 @@ export PATH=/stage1
 busybox cd /
 busybox date >>boot.txt
 exec >>boot.txt 2>&1
+
+### FUNCTIONS
+
+function unpack() {
+	unpack=cat
+	unpack_gz=zcat
+	unpack_bz=bzcat
+	unpack_bz2=bzcat
+	unpack_bzip2=bzcat
+	unpack_xz=xzcat
+	unpack_lz=lzcat
+
+	expand_cpio="cpio -i -u"
+	expand_tar="tar -xf -"
+	expand_tgz="tar -zxf -"
+
+	fname=$1
+
+	#find the unpacker
+	ext=${fname##*.}
+	eval tmp=\$unpack_$ext
+	if [ -z "$tmp" ]; then
+		echo "WARNING: unpacker for .$ext not found, trying cat..."
+	else
+		unpack=$tmp
+		fname=${fname%.*}
+		ext=${fname##*.}
+	fi
+
+	#expand the archive
+	eval expand="\$expand_$ext"
+	if [ -z "$expand" ]; then
+		echo "ERROR: expander for $1 not found"
+		return
+	fi
+
+	echo "Extracting $1..."
+	$unpack $1 | $expand
+}
+
+function load_dir() {
+	src=$1
+
+	echo "Loading overlays from $src..."
+	for f in $src/*; do
+		[ ! -s $f ] && continue
+		unpack $f
+	done
+}
+### END FUNCTIONS
+
 busybox rm init
 busybox mount -t proc proc /proc
 busybox mount -t sysfs sysfs /sys
 
 load_image=/stage1/boot.cpio
+#boot/recovery specific overlay
 extra_image=/mnt/efs/boot.cpio.gz
+extra_dir=/mnt/efs/boot
+
+#common overlay
+common_dir=/mnt/efs/common
 
 if busybox grep -q bootmode=2 /proc/cmdline ; then
 	# recovery boot
 	load_image=/stage1/recovery.cpio
 	extra_image=/mnt/efs/recovery.cpio.gz
+	extra_dir=/mnt/efs/recovery
 fi
 
 busybox cpio -i < ${load_image}
-
-busybox mount -t ext4 /dev/block/mmcblk0p7 /mnt/efs
 
 # install lvm files and apply overlay if it exists
 if busybox test -f /stage1/lvm.cpio ; then
 	busybox cpio -i < /stage1/lvm.cpio
 fi
 
+busybox mount -t ext4 /dev/block/mmcblk0p7 /mnt/efs
+
+# LEGACY BEGIN
+
+#DON'T USE THESE IF POSSIBLE - use dirs below
 # apply ramdisk overlay from /efs partition
 if busybox test -f ${extra_image} ; then
 	busybox zcat ${extra_image} | busybox cpio -i -u
@@ -34,9 +94,18 @@ fi
 if busybox test -f /mnt/efs/lvm.cpio.gz ; then
 	busybox zcat /mnt/efs/lvm.cpio.gz | busybox cpio -i -u
 fi
-busybox umount /mnt/efs
+
+# LEGACY END
+
+[ -d $common_dir ] && load_dir $common_dir
+[ -d $extra_dir ] && load_dir $extra_dir
+
+[ -d $common_dir/overlay ] && cp -af $common_dir/overlay/* /
+[ -d $extra_dir/overlay ] && cp -af $extra_dir/overlay/* /
 
 busybox test -f /stage1/extra.sh && busybox sh /stage1/extra.sh
+
+busybox umount /mnt/efs
 
 busybox umount /sys
 busybox umount /proc
