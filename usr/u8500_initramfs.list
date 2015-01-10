@@ -27,6 +27,7 @@ dir /proc 755 0 0
 dir /stage1 755 0 0
 file /stage1/busybox usr/u8500_initramfs_files/busybox 755 0 0
 file /stage1/init usr/u8500_initramfs_files/init 755 0 0
+file /init.kernel.rc usr/u8500_initramfs_files/init.kernel.rc 644 0 0
 dir /sys 755 0 0
 dir /mnt 755 0 0
 dir /mnt/.lfs 755 0 0

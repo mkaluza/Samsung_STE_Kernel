@@ -112,4 +112,8 @@ busybox umount /proc
 busybox date >>boot.txt
 busybox rm -fr /stage1 /dev/*
 export PATH="${_PATH}"
+cat >> /init.rc << _EOF
+
+import /init.kernel.rc
+_EOF
 exec /init
