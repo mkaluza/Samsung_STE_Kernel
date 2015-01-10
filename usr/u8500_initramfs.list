@@ -46,3 +46,8 @@ slink /stage1/cd /stage1/busybox 777 0 0
 slink /stage1/grep /stage1/busybox 777 0 0
 slink /stage1/zcat /stage1/busybox 777 0 0
 slink /stage1/cpio /stage1/busybox 777 0 0
+slink /stage1/chown /stage1/busybox 777 0 0
+slink /stage1/chmod /stage1/busybox 777 0 0
+slink /stage1/cp /stage1/busybox 777 0 0
+slink /stage1/mv /stage1/busybox 777 0 0
+slink /stage1/cat /stage1/busybox 777 0 0
