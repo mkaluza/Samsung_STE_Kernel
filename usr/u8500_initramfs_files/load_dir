@@ -4,6 +4,6 @@ src=$1
 
 echo "Loading overlays from $src..."
 for f in $src/*; do
-	[ ! -s $f ] && continue
+	[ -d $f ] && continue
 	unpack $f
 done

@@ -58,13 +58,17 @@ chmod 644 /init.overlay.rc
 
 busybox test -f /stage1/extra.sh && busybox sh /stage1/extra.sh
 
-cat >> /init.rc << _EOF
+cp /init.rc /stage1/init.rc
+
+cat > /init.rc << _EOF
 
 #monkey-patched by stage1 init script
 import /init.kernel.rc
 import /init.overlay.rc
 import /init.extra.rc
+#monkey-patch end
 _EOF
+cat /stage1/init.rc >> /init.rc
 
 busybox umount /mnt/efs
 
