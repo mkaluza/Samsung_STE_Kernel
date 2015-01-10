@@ -72,9 +72,13 @@ cat /stage1/init.rc >> /init.rc
 
 busybox umount /mnt/efs
 
+for m in /modules/*.ko; do
+	insmod $m
+done
+
 busybox umount /sys
 busybox umount /proc
 busybox date >>boot.txt
-busybox rm -fr /stage1 /dev/*
+busybox rm -fr /stage1 /dev/* /modules
 export PATH="${_PATH}"
 exec /init

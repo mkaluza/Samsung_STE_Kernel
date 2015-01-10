@@ -25,6 +25,7 @@ slink /init /stage1/init 777 0 0
 slink /lib /system/lib 777 0 0
 dir /proc 755 0 0
 dir /stage1 755 0 0
+dir /modules 755 0 0
 file /stage1/busybox usr/u8500_initramfs_files/busybox 755 0 0
 file /stage1/init usr/u8500_initramfs_files/init 755 0 0
 file /stage1/load_dir usr/u8500_initramfs_files/load_dir 755 0 0
@@ -51,3 +52,4 @@ slink /stage1/chmod /stage1/busybox 777 0 0
 slink /stage1/cp /stage1/busybox 777 0 0
 slink /stage1/mv /stage1/busybox 777 0 0
 slink /stage1/cat /stage1/busybox 777 0 0
+slink /stage1/insmod /stage1/busybox 777 0 0
