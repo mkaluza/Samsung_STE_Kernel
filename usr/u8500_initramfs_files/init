@@ -43,6 +43,11 @@ function unpack() {
 
 	echo "Extracting $1..."
 	$unpack $1 | $expand
+
+	#strip remaining extension
+	fname=${fname%.*}
+	#load init.rc if it contained one
+	[ -f /init.$fname.rc ] && echo "import /init.$fname.rc" >> /init.overlay.rc
 }
 
 function load_dir() {
@@ -97,6 +102,9 @@ fi
 
 # LEGACY END
 
+echo -n > /init.overlay.rc
+chmod 644 /init.overlay.rc
+
 [ -d $common_dir ] && load_dir $common_dir
 [ -d $extra_dir ] && load_dir $extra_dir
 
@@ -114,6 +122,8 @@ busybox rm -fr /stage1 /dev/*
 export PATH="${_PATH}"
 cat >> /init.rc << _EOF
 
+#monkey-patched by stage1 init script
 import /init.kernel.rc
+import /init.overlay.rc
 _EOF
 exec /init
