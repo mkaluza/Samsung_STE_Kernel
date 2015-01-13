@@ -50,10 +50,18 @@ fi
 echo -n > /init.overlay.rc
 chmod 644 /init.overlay.rc
 
+# safety measure to prevent common includes to damage /init.rc and prevent phone from booting
+cp /init.rc /stage1/
 [ -d $common_dir ] && load_dir $common_dir
+cp -f /stage1/init.rc /
+
 [ -d $extra_dir ] && load_dir $extra_dir
 
+# safety measure to prevent common includes to damage /init.rc and prevent phone from booting
+cp -f /init.rc /stage1/
 [ -d $common_dir/overlay ] && cp -af $common_dir/overlay/* /
+cp -f /stage1/init.rc /
+
 [ -d $extra_dir/overlay ] && cp -af $extra_dir/overlay/* /
 
 busybox test -f /stage1/extra.sh && busybox sh /stage1/extra.sh
