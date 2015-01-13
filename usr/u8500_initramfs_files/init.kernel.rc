@@ -1,3 +1,6 @@
+on post-fs
+    exec grep -v "#" /system/etc/modules | sed -e "s/[ \t]//g" | xargs -i insmod /system/lib/modules/{}.ko
+
 on boot
     # Load Dynamic Governor
     insmod /system/lib/modules/cpufreq_dynamic.ko
