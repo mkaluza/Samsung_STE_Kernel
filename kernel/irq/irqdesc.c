@@ -451,6 +451,7 @@ unsigned int kstat_irqs_cpu(unsigned int irq, int cpu)
 	return desc && desc->kstat_irqs ?
 			*per_cpu_ptr(desc->kstat_irqs, cpu) : 0;
 }
+EXPORT_SYMBOL_GPL(kstat_irqs_cpu);
 
 unsigned int kstat_irqs(unsigned int irq)
 {
