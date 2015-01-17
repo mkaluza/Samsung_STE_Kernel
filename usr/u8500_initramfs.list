@@ -27,18 +27,18 @@ dir /proc 755 0 0
 dir /stage1 755 0 0
 dir /modules 755 0 0
 dir /sbin 755 0 0
-file /sbin/load_modules.sh usr/u8500_initramfs_files/load_modules.sh 755 0 0
-file /stage1/busybox usr/u8500_initramfs_files/busybox 755 0 0
-file /stage1/init usr/u8500_initramfs_files/init 755 0 0
-file /stage1/load_dir usr/u8500_initramfs_files/load_dir 755 0 0
-file /stage1/unpack usr/u8500_initramfs_files/unpack 755 0 0
-file /init.kernel.rc usr/u8500_initramfs_files/init.kernel.rc 644 0 0
+file /sbin/load_modules.sh source/usr/u8500_initramfs_files/load_modules.sh 755 0 0
+file /stage1/busybox source/usr/u8500_initramfs_files/busybox 755 0 0
+file /stage1/init source/usr/u8500_initramfs_files/init 755 0 0
+file /stage1/load_dir source/usr/u8500_initramfs_files/load_dir 755 0 0
+file /stage1/unpack source/usr/u8500_initramfs_files/unpack 755 0 0
+file /init.kernel.rc source/usr/u8500_initramfs_files/init.kernel.rc 644 0 0
 dir /sys 755 0 0
 dir /mnt 755 0 0
 dir /mnt/.lfs 755 0 0
 dir /mnt/efs 755 0 0
-file /stage1/boot.cpio usr/u8500_initramfs_files/boot.cpio 644 0 0
-file /stage1/recovery.cpio usr/u8500_initramfs_files/recovery.cpio 644 0 0
+file /stage1/boot.cpio ../../ramdisk.cpio 644 0 0
+file /stage1/recovery.cpio ../../ramdisk-recovery.cpio 644 0 0
 slink /stage1/sh /stage1/busybox 777 0 0
 slink /stage1/mount /stage1/busybox 777 0 0
 slink /stage1/umount /stage1/busybox 777 0 0
