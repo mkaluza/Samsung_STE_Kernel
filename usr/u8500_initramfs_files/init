@@ -64,8 +64,6 @@ cp -f /stage1/init.rc /
 
 [ -d $extra_dir/overlay ] && cp -af $extra_dir/overlay/* /
 
-busybox test -f /stage1/extra.sh && busybox sh /stage1/extra.sh
-
 cp /init.rc /stage1/init.rc
 
 cat > /init.rc << _EOF
@@ -78,11 +76,13 @@ import /init.extra.rc
 _EOF
 cat /stage1/init.rc >> /init.rc
 
-busybox umount /mnt/efs
-
 for m in /modules/*.ko; do
 	insmod $m
 done
+
+busybox test -f /stage1/extra.sh && busybox sh /stage1/extra.sh
+
+busybox umount /mnt/efs
 
 busybox umount /sys
 busybox umount /proc
