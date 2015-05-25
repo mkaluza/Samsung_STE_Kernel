@@ -39,6 +39,7 @@ void dcg2900_u8500_enable_chip(struct cg2900_chip_dev *dev)
 	/* Set PDB to high. */
 	gpio_set_value(info->gbf_gpio, 1);
 }
+EXPORT_SYMBOL(dcg2900_u8500_enable_chip);
 
 void dcg2900_u8500_disable_chip(struct cg2900_chip_dev *dev)
 {
@@ -51,6 +52,7 @@ void dcg2900_u8500_disable_chip(struct cg2900_chip_dev *dev)
 	schedule_timeout_killable(
 			msecs_to_jiffies(CHIP_ENABLE_PDB_LOW_TIMEOUT));
 }
+EXPORT_SYMBOL(dcg2900_u8500_disable_chip);
 
 int dcg2900_u8500_setup(struct cg2900_chip_dev *dev,
 					struct dcg2900_info *info)
@@ -160,6 +162,7 @@ err_handling:
 
 	return err;
 }
+EXPORT_SYMBOL(dcg2900_u8500_setup);
 
 /* prcmu resout1 pin is used for CG2900 reset*/
 void dcg2900_u5500_enable_chip(struct cg2900_chip_dev *dev)

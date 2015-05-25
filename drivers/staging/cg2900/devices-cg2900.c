@@ -289,3 +289,4 @@ void dcg2900_init_platdata(struct cg2900_platform_data *data)
 	data->uart.enable_uart = dcg2900_enable_uart;
 	data->uart.disable_uart = dcg2900_disable_uart;
 }
+EXPORT_SYMBOL(dcg2900_init_platdata);
