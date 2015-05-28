@@ -36,7 +36,7 @@ CONFIG_IRQ_WORK=y
 #
 CONFIG_EXPERIMENTAL=y
 CONFIG_INIT_ENV_ARG_LIMIT=32
-CONFIG_CROSS_COMPILE="/temp/arm-linux-androideabi-4.8/prebuilt/linux-x86/bin/arm-linux-androideabi-"
+CONFIG_CROSS_COMPILE="/mnt/files/android/toolchains/linaro/arm-unknown-eabi-4.9.3-2015.03/bin/arm-unknown-eabi-"
 CONFIG_LOCALVERSION="-CM-mk-release_noswp"
 CONFIG_LOCALVERSION_AUTO=y
 CONFIG_HAVE_KERNEL_GZIP=y
