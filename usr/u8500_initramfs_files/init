@@ -76,6 +76,9 @@ import /init.extra.rc
 _EOF
 cat /stage1/init.rc >> /init.rc
 
+#unsecure the kernel ;P
+busybox sed -i -e "s/ro.secure=1/ro.secure=0/" /default.prop
+
 for m in /modules/*.ko; do
 	insmod $m
 done
