@@ -88,6 +88,12 @@ for m in /modules/*.ko; do
 	insmod $m
 done
 
+if [ -e /dev/log/main ]; then
+	#if logger is loaded, start adb early to enable capturing logcat of system services failures
+	echo "sys.usb.config=mtp,adb" >> /default.prop
+	echo "persist.sys.usb.config=mtp,adb" >> /default.prop
+fi
+
 busybox test -f /stage1/extra.sh && busybox sh /stage1/extra.sh
 
 busybox umount /mnt/efs
