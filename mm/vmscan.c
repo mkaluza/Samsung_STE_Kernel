@@ -1571,6 +1571,8 @@ shrink_inactive_list(unsigned long nr_to_scan, struct mem_cgroup_zone *mz,
 	unsigned long nr_taken;
 	unsigned long nr_anon;
 	unsigned long nr_file;
+	unsigned long nr_dirty;
+	unsigned long nr_writeback;
 	isolate_mode_t reclaim_mode = ISOLATE_INACTIVE;
 	struct zone *zone = mz->zone;
 
@@ -1955,10 +1957,10 @@ static void get_scan_count(struct mem_cgroup_zone *mz, struct scan_control *sc,
 	int force_scan = 0;
 	unsigned long nr_force_scan[2];
 
-	anon  = zone_nr_lru_pages(zone, sc, LRU_ACTIVE_ANON) +
-		zone_nr_lru_pages(zone, sc, LRU_INACTIVE_ANON);
-	file  = zone_nr_lru_pages(zone, sc, LRU_ACTIVE_FILE) +
-		zone_nr_lru_pages(zone, sc, LRU_INACTIVE_FILE);
+	anon  = zone_nr_lru_pages(mz, LRU_ACTIVE_ANON) +
+		zone_nr_lru_pages(mz, LRU_INACTIVE_ANON);
+	file  = zone_nr_lru_pages(mz, LRU_ACTIVE_FILE) +
+		zone_nr_lru_pages(mz, LRU_INACTIVE_FILE);
 
 	if (((anon + file) >> priority) < SWAP_CLUSTER_MAX) {
 		/* kswapd does zone balancing and need to scan this zone */
@@ -3690,7 +3692,7 @@ void scan_mapping_unevictable_pages(struct address_space *mapping)
 #define SCAN_UNEVICTABLE_BATCH_SIZE 16UL /* arbitrary lock hold batch size */
 static void scan_zone_unevictable_pages(struct zone *zone)
 {
-	struct list_head *l_unevictable = &zone->lru[LRU_UNEVICTABLE].list;
+	struct list_head *l_unevictable = &zone->lruvec.lists[LRU_UNEVICTABLE];
 	unsigned long scan;
 	unsigned long nr_to_scan = zone_page_state(zone, NR_UNEVICTABLE);
 
