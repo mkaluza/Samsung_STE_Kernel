@@ -6,14 +6,9 @@ busybox cd /
 busybox date >>boot.txt
 exec >>boot.txt 2>&1
 
-busybox rm init
-busybox mount -t proc proc /proc
-busybox mount -t sysfs sysfs /sys
-
-load_image=/stage1/boot.cpio
-#boot/recovery specific overlay
-extra_image=/mnt/efs/boot.cpio.gz
-extra_dir=/mnt/efs/boot
+rm init
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
 
 #common overlay
 common_dir=/mnt/efs/common
@@ -23,6 +18,36 @@ if busybox grep -q bootmode=2 /proc/cmdline ; then
 	load_image=/stage1/recovery.cpio
 	extra_image=/mnt/efs/recovery.cpio.gz
 	extra_dir=/mnt/efs/recovery
+else
+	mount -t ext4 /dev/block/mmcblk0p3 /system
+
+	sdk=`grep version.sdk /system/build.prop | cut -d= -f2`
+
+	case $sdk in
+		16)
+			ramdisk="stock"
+			;;
+		17)
+			ramdisk="cm-10.1"
+			;;
+		18)
+			ramdisk="cm-10.2"
+			;;
+		21|22)
+			ramdisk="cm-12.1"
+			;;
+		*)
+			#kitkat
+			ramdisk="cm-11.0"
+			;;
+	esac
+
+	load_image=/stage1/$ramdisk.cpio
+	#boot/recovery specific overlay
+	extra_image=/mnt/efs/boot.$sdk.cpio.gz
+	extra_dir=/mnt/efs/boot
+
+	umount /system
 fi
 
 busybox cpio -i < ${load_image}
