@@ -2,8 +2,8 @@
 _PATH="$PATH"
 export PATH=/stage1
 
-busybox cd /
-busybox date >>boot.txt
+cd /
+date >>boot.txt
 exec >>boot.txt 2>&1
 
 rm init
@@ -13,7 +13,7 @@ mount -t sysfs sysfs /sys
 #common overlay
 common_dir=/mnt/efs/common
 
-if busybox grep -q bootmode=2 /proc/cmdline ; then
+if grep -q bootmode=2 /proc/cmdline ; then
 	# recovery boot
 	load_image=/stage1/recovery.cpio
 	extra_image=/mnt/efs/recovery.cpio.gz
@@ -57,7 +57,7 @@ if busybox test -f /stage1/lvm.cpio ; then
 	busybox cpio -i < /stage1/lvm.cpio
 fi
 
-busybox mount -t ext4 /dev/block/mmcblk0p7 /mnt/efs
+mount -t ext4 /dev/block/mmcblk0p7 /mnt/efs
 
 # LEGACY BEGIN
 
@@ -119,13 +119,13 @@ if [ -e /dev/log/main ]; then
 	echo "persist.sys.usb.config=mtp,adb" >> /default.prop
 fi
 
-busybox test -f /stage1/extra.sh && busybox sh /stage1/extra.sh
+test -f /stage1/extra.sh && sh /stage1/extra.sh
 
-busybox umount /mnt/efs
+umount /mnt/efs
 
-busybox umount /sys
-busybox umount /proc
-busybox date >>boot.txt
-busybox rm -fr /stage1 /dev/* /modules
+umount /sys
+umount /proc
+date >>boot.txt
+rm -fr /stage1 /dev/* /modules
 export PATH="${_PATH}"
 exec /init
