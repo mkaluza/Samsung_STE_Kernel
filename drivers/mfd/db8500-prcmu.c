@@ -1171,8 +1171,11 @@ static struct liveopp_arm_table liveopp_arm[] = {
 	{1050000, 1049600, ARM_MAX_OPP,   NOCHG, 0x741, SET_PLL, 0x00030152, SET_VOLT, 0x0B, 0x34, 0xDB, 100, 100},
 	{1100000, 1100800, ARM_MAX_OPP,   NOCHG, 0x741, SET_PLL, 0x00030156, SET_VOLT, 0x0B, 0x34, 0x8F, 100, 100},
 	{1150000, 1152000, ARM_MAX_OPP,   NOCHG, 0x741, SET_PLL, 0x0001011E, SET_VOLT, 0x0B, 0x35, 0x8F, 100, 100},
-	{1200000, 1200000, ARM_MAX_OPP,   NOCHG, 0x741, SET_PLL, 0x0004017D, SET_VOLT, 0x0B, 0x35, 0x8F, 100, 100},
-	{1250000, 1248000, ARM_MAX_OPP,   NOCHG, 0x741, SET_PLL, 0x00040182, SET_VOLT, 0x0B, 0x35, 0x8F, 100, 100},
+	{1200000, 1200000, ARM_MAX_OPP,   NOCHG, 0x741, SET_PLL, 0x0004017D, SET_VOLT, 0x0B, 0x36, 0x8F, 100, 100},
+	{1250000, 1248000, ARM_MAX_OPP,   NOCHG, 0x741, SET_PLL, 0x00040182, SET_VOLT, 0x0B, 0x37, 0x8F, 100, 100},
+	{1300000, 1305600, ARM_MAX_OPP,   NOCHG, 0x741, SET_PLL, 0x00040188, SET_VOLT, 0x0B, 0x38, 0x8F, 100, 100},
+	{1350000, 1353600, ARM_MAX_OPP,   NOCHG, 0x741, SET_PLL, 0x0004018D, SET_VOLT, 0x0B, 0x39, 0x8F, 100, 100},
+	{1400000, 1401600, ARM_MAX_OPP,   NOCHG, 0x741, SET_PLL, 0x00040192, SET_VOLT, 0x0B, 0x3A, 0x8F, 100, 100},
 #endif /* CONFIG_MACH_CODINA */
 };
 
@@ -1566,6 +1569,9 @@ ARM_STEP(arm_step11, 11);
 ARM_STEP(arm_step12, 12);
 ARM_STEP(arm_step13, 13);
 ARM_STEP(arm_step14, 14);
+ARM_STEP(arm_step15, 15);
+ARM_STEP(arm_step16, 16);
+ARM_STEP(arm_step17, 17);
 
 #if CONFIG_LIVEOPP_DEBUG > 1
 static ssize_t liveopp_start_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)		
@@ -1604,6 +1610,9 @@ static struct attribute *liveopp_attrs[] = {
 	&arm_step12_interface.attr, 
 	&arm_step13_interface.attr, 
 	&arm_step14_interface.attr, 
+	&arm_step15_interface.attr,
+	&arm_step16_interface.attr,
+	&arm_step17_interface.attr,
 	NULL,
 };
 
